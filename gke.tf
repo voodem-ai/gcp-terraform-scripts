@@ -16,6 +16,7 @@ resource "google_container_cluster" "primary" {
   }
 
   deletion_protection = false
+  depends_on          = [google_project_service.kubernetes]
 }
 
 # Add a single node pool with preemptible e2-small instances for minimal cost
