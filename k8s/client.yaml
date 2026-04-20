@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-client
+  labels:
+    app: ecommerce-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-client
+  template:
+    metadata:
+      labels:
+        app: ecommerce-client
+    spec:
+      containers:
+      - name: client
+        image: REPLACE_ME_CLIENT_IMAGE
+        ports:
+        - containerPort: 8001
+        env:
+        - name: MCP_SERVER_URL
+          # Points to the internal k8s DNS name of the server svc
+          value: "http://ecommerce-server-svc:8000/mcp/sse"
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ecommerce-secrets
+              key: gemini-api-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-client-svc
+  # We use a backend config for the cloud load balancer to know it's port 8001
+  annotations:
+    cloud.google.com/backend-config: '{"default": "ecommerce-client-backendconfig"}'
+spec:
+  type: NodePort
+  selector:
+    app: ecommerce-client
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: ecommerce-client-backendconfig
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    port: 8001
+    type: HTTP
+    requestPath: /health

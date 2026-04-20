@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-server
+  labels:
+    app: ecommerce-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-server
+  template:
+    metadata:
+      labels:
+        app: ecommerce-server
+    spec:
+      containers:
+      - name: server
+        image: REPLACE_ME_SERVER_IMAGE
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SCRAPER_MODE
+          value: "gemini"
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ecommerce-secrets
+              key: gemini-api-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-server-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: ecommerce-server
+  ports:
+  - port: 8000
+    targetPort: 8000
