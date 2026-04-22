@@ -16,15 +16,13 @@ This repository contains the Infrastructure as Code (IaC) configuration using Ha
 - [x] Allocate Global Static IP for permanent public access (`k8s-ingress.tf`)
 - [x] Define Kubernetes GCE Ingress map to connect the Static IP to the Google Application Load Balancer
 
-## Phase 3: Application Deployment Definitions ✅
-- [x] `k8s/server.yaml`: Backend MCP server container definition exposed on port 8000 internally
-- [x] `k8s/client.yaml`: MCP Agent Orchestration NodePort service exposed on port 8001
-- [x] `k8s/ui.yaml`: React Frontend NodePort service exposed on port 80
-- [x] `k8s/ingress.yaml`: L7 routing logic to proxy traffic to UI or Client backend transparently
+## Phase 3: Application Deployment Definitions (Migrated) ✅
+- [x] Application deployment configurations have been moved to Helm charts in their respective repositories (`ui`, `client`, `server`).
+- [x] Removed the old static Kubernetes manifests (`k8s/` folder) to prevent drift.
 
 ## Phase 4: Integration with Application CI/CD ✅
 - [x] All application repositories modified to automatically build and push to Google Artifact Registry
-- [x] Repositories modified to run `kubectl set image` against the cluster upon success
+- [x] Repositories modified to run `helm upgrade --install` against the cluster upon success
 
 ---
 
@@ -36,11 +34,6 @@ gcp-terraform-scripts/
 ├── vpc.tf               # Regional VPC Subnets and network definitions
 ├── gke.tf               # Kubernetes Engine cluster & Node Pool resources
 ├── k8s-ingress.tf       # Global Static IP address allocations
-├── k8s/
-│   ├── server.yaml      # MCP Backend Deployment
-│   ├── client.yaml      # Agent Orchestration Deployment
-│   ├── ui.yaml          # Frontend Web App Deployment
-│   └── ingress.yaml     # Application Load Balancer configuration
 ├── IMPLEMENTATION_PLAN.md
 ├── SKILLS.md
 └── README.md

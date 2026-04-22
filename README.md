@@ -2,7 +2,7 @@
 
 This repository contains the authoritative **Terraform Infrastructure as Code (IaC)** required to provision the cloud boundaries, hardware, and traffic routing layer for the E-Commerce Best Products AI ecosystem on the Google Cloud Platform. 
 
-In addition to infrastructure generation, it houses the raw Kubernetes Application Resource Definitions targeting the resulting GKE cluster.
+*Note: Application deployments have been migrated to Helm charts located in their respective repositories.*
 
 ---
 
@@ -16,11 +16,11 @@ These scripts are carefully tuned to deploy an enterprise-grade Kubernetes topol
     *   **Node Pool Configuration**: Leverages `e2-small` instances utilizing the Spot/Preemptible capability flag, ensuring instances run as long as there is excess capacity on Google Compute Engine, massively cutting hosting costs while autoscale elasticity buffers failures.
 3. **Ingress Networking (`k8s-ingress.tf`)**: Allocates a monolithic Global Static IP to permanently pin the Application Load Balancer to a known location for DNS bindings.
 
-### 📂 The Cluster Workload Layer (Kubernetes)
-Housed within the `k8s/` boundary, these manifests orchestrate the deployment of the product ecosystem.
+### 📂 The Cluster Workload Layer (Helm)
+Application workloads are now deployed via Helm charts located in their respective repositories (`ecommerce-best-products-ui`, `ecommerce-best-products-client`, `ecommerce-best-products-server`).
 *   **Databaseless Configuration**: All data is synthesized at ingestion time utilizing Gemini context boundaries eliminating persistent storage overheads. 
-*   **Path Routing Context (`ingress.yaml`)**: An implementation-specific Ingress CRD natively translates to a Google Cloud Http proxy parsing the URL tree. Root level traffic `/*` is siphoned natively into the React App container, while anything under the `/api/*` context path invokes the Client NodePort Orchestration Server implicitly bypassing cross-domain limitations.
-*   **System Integrity**: Cloud Native Health hooks deployed via `BackendConfig` ping specific validation endpoints to eject routing artifacts dynamically if individual application instances stall.
+*   **Internal Security**: The Client and Server services are configured as ClusterIP, making them inaccessible from the public internet.
+*   **Path Routing Context**: The UI Helm chart deploys an Ingress resource mapped to the global static IP. The UI's Nginx container acts as a reverse proxy, routing `/api/*` traffic internally to the Client service.
 
 ---
 
@@ -63,7 +63,5 @@ Push the secrets boundary into Kubernetes Memory:
 ```bash
 kubectl create secret generic ecommerce-secrets --from-literal=gemini-api-key="YOUR_KEY_HERE"
 ```
-Apply the application limits:
-```bash
-kubectl apply -f k8s/
-```
+
+Deployment is now handled by CI/CD pipelines (GitHub Actions) using Helm charts in the individual service repositories (`ui`, `client`, `server`). Any push to the main branch of those repositories will automatically trigger a build and a `helm upgrade --install` deployment.
