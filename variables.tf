@@ -21,3 +21,9 @@ variable "network_name" {
   type        = string
   default     = "ecommerce-vpc"
 }
+
+variable "master_cidr_block" {
+  description = "CIDR block for the GKE master's private endpoint (must be /28)"
+  type        = string
+  default     = "172.16.0.0/28"
+}

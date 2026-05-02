@@ -15,6 +15,26 @@ resource "google_container_cluster" "primary" {
     services_secondary_range_name = "gke-services"
   }
 
+  # Private cluster — nodes have no external IPs, protected from the internet
+  private_cluster_config {
+    enable_private_nodes    = true
+    enable_private_endpoint = false
+    master_ipv4_cidr_block  = var.master_cidr_block
+  }
+
+  # Workload Identity — secure, keyless access to GCP services from pods
+  workload_identity_config {
+    workload_pool = "${var.project_id}.svc.id.goog"
+  }
+
+  # Control plane access — open for CI/CD; tighten for production
+  master_authorized_networks_config {
+    cidr_blocks {
+      cidr_block   = "0.0.0.0/0"
+      display_name = "All (CI/CD compatible — restrict for production)"
+    }
+  }
+
   deletion_protection = false
   depends_on          = [google_project_service.kubernetes]
 }
@@ -39,5 +59,13 @@ resource "google_container_node_pool" "primary_nodes" {
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
+
+    # Workload Identity requires this metadata to be set on nodes
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
   }
+
+  depends_on = [google_compute_router_nat.nat]
 }
+
